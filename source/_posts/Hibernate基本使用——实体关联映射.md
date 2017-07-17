@@ -472,7 +472,7 @@ mappedBy的具体含义，参见：[hibernate的注解属性mappedBy详解](http
        foreign key (USER_ID) 
        references User (id)
 如果不指明**@JoinColumn**和**@JoinTable**，则在可嵌入组件的一对多关系当中，默认采用后者。
-# 多对多关联和三元关联
+# 多对多关联
 一般采用中间表的方式来实现多对多关联：
 
 	@Entity
@@ -502,6 +502,3 @@ mappedBy的具体含义，参见：[hibernate的注解属性mappedBy详解](http
 	    ...
 	}
 如果要映射像List这样的集合，只能在一侧使用，如果两侧都是链表，则只能一侧被持久化。
-
-
-
