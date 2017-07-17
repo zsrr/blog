@@ -5,7 +5,7 @@ tags: [数据库,ORM,Hibernate,Java Web]
 categories: ORM
 
 ---
-本篇主要讨论实体间关联的映射，包括一对一映射，一对多映射，多对多映射。
+本篇主要讨论实体间关联的映射，包括一对一关联，一对多关联，多对多关联，三元关联。
 # 一对一关联
 创建一对一关联主要有以下几种方式：
 ## 共享主键
@@ -473,6 +473,7 @@ mappedBy的具体含义，参见：[hibernate的注解属性mappedBy详解](http
        references User (id)
 如果不指明**@JoinColumn**和**@JoinTable**，则在可嵌入组件的一对多关系当中，默认采用后者。
 # 多对多关联
+## 隐藏中间表
 一般采用中间表的方式来实现多对多关联：
 
 	@Entity
@@ -502,3 +503,151 @@ mappedBy的具体含义，参见：[hibernate的注解属性mappedBy详解](http
 	    ...
 	}
 如果要映射像List这样的集合，只能在一侧使用，如果两侧都是链表，则只能一侧被持久化。
+
+上述中间表对于Java层是隐藏的，也可以自己亲自建立一个实体类，用作中间表。
+## 中间实体多对多关联
+可以采用一个Java类来表示中间表。此类与两端具有多对多关系的两个类都是一对多关系：
+
+	@Entity
+	@org.hibernate.annotations.Immutable
+	public class CategorizedItem {
+	
+	    @Embeddable
+	    private static class Id implements Serializable {
+	        @Column(name = "CATEGORY_ID", nullable = false)
+	        protected Long categoryId;
+	
+	        @Column(name = "ITEM_ID", nullable = false)
+	        protected Long itemId;
+	
+	        public Id() {
+	        }
+	
+	        public Id(Long categoryId, Long itemId) {
+	            this.categoryId = categoryId;
+	            this.itemId = itemId;
+	        }
+	
+	        @Override
+	        public boolean equals(Object o) {
+	            if (this == o) return true;
+	            if (o == null || getClass() != o.getClass()) return false;
+	
+	            Id id = (Id) o;
+	
+	            if (!categoryId.equals(id.categoryId)) return false;
+	            return itemId.equals(id.itemId);
+	        }
+	
+	        @Override
+	        public int hashCode() {
+	            int result = categoryId.hashCode();
+	            result = 31 * result + itemId.hashCode();
+	            return result;
+	        }
+	    }
+	
+	    @EmbeddedId
+	    protected Id id = new Id();
+	
+	    @Temporal(TemporalType.TIMESTAMP)
+	    @Column(updatable = false)
+	    @NotNull
+	    protected Date date = new Date();
+	
+	    @ManyToOne
+	    @JoinColumn(name = "CATEGORY_ID", insertable = false, updatable = false)
+	    protected Category category;
+	
+	    @ManyToOne
+	    @JoinColumn(name = "ITEM_ID", insertable = false, updatable = false)
+	    protected Item item;
+	
+	    public CategorizedItem(Category category, Item item) {
+	        this.category = category;
+	        this.item = item;
+	        this.id.categoryId = category.id;
+	        this.id.itemId = item.id;
+	        category.getCategorizedItems().add(this);
+	        item.getCategorizedItems().add(this);
+	    }
+	
+	    public CategorizedItem() {
+	    }
+	}
+复合主键的组成部分就是Category类和Item类的主键，在构造函数中被指定，并且在之后不能更改。设置insertable和updatable为false的原因是主键是在构造函数中被设置，作为主键的组成部分应该设置成只读。
+# 三元关联
+三个以上的实体关联成为三元关联。
+## 组件三元关联
+可以采用组件的多对一／一对多特性来设置三元关联：
+
+	@Embeddable
+	public class CategorizedItem {
+	    @ManyToOne
+	    // 用作主键
+	    @JoinColumn(name = "ITEM_ID", nullable = false)
+	    protected Item item;
+	
+	    @ManyToOne
+	    @JoinColumn(name = "USER_ID")
+	    protected User user;
+	
+	    @Override
+	    public boolean equals(Object o) {
+	        if (this == o) return true;
+	        if (o == null || getClass() != o.getClass()) return false;
+	
+	        CategorizedItem that = (CategorizedItem) o;
+	
+	        return item != null ? item.equals(that.item) : that.item == null;
+	    }
+	
+	    @Override
+	    public int hashCode() {
+	        return item != null ? item.hashCode() : 0;
+	    }
+	}
+	
+	@Entity
+	public class Category {
+	    ...
+	
+	    @ElementCollection
+	    @CollectionTable(name = "CATEGORY_ITEM", joinColumns = @JoinColumn(name = "CATEGORY_ID"))
+	    protected Set<CategorizedItem> categorizedItems = new HashSet<>();
+	
+	    ...
+	}
+生成的sql语句：
+
+	create table CATEGORY_ITEM (
+       CATEGORY_ID bigint not null,
+        ITEM_ID bigint not null,
+        USER_ID bigint,
+        primary key (CATEGORY_ID, ITEM_ID)
+    ) engine=MyISAM
+要注意可嵌入类的超键是如何声明的，应该重写Item类的equals和hashCode方法。此时Item和Category是多对多关联，两个分别和User是多对多关联。
+## 键／值三元关联
+也可以使用键值操作来实现三元关联：
+
+	@Entity
+	public class Category {
+	    ...
+	
+	    @ManyToMany(cascade = CascadeType.PERSIST)
+	    @MapKeyJoinColumn(name = "ITEM_ID")
+	    @JoinTable(name = "CATEGORY_ITEM",
+	            joinColumns = @JoinColumn(name = "CATEGORY_ID"),
+	            inverseJoinColumns = @JoinColumn(name = "USER_ID"))
+	    protected Map<Item, User> itemUserMap = new HashMap<>();
+	
+	    ...
+	}
+sql语句：
+	
+	create table CATEGORY_ITEM (
+       CATEGORY_ID bigint not null,
+        USER_ID bigint not null,
+        ITEM_ID bigint not null,
+        primary key (CATEGORY_ID, ITEM_ID)
+    ) engine=MyISAM
