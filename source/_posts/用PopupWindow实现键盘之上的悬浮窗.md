@@ -5,6 +5,9 @@ tags: Android
 categories: 安卓开发
 
 ---
+一个常用的控件，有时间可以考虑封装一下
+<!--more-->
+
 最近遇到一个写评论的需求，就是点击一个写评论的按钮跳出软键盘，软键盘之上有一个输入框和发送按钮，想了好半天决定采用悬浮窗，其主要想法来自：[模仿微信，QQ评论输入框](http://www.itdadao.com/articles/c15a380342p0.html)，其效果图如下：
 ![](http://ok34fi9ya.bkt.clouddn.com/Screenshot_1491657613.png)
 

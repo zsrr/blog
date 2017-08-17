@@ -7,6 +7,7 @@ categories: ORM
 ---
 
 本篇记录Hibernate实体映射的基础，采用IntelliJ Idea搭建Hibernate项目，具体如何搭建参见：[IntelliJ IDEA Hibernate 从入门到填坑](http://www.jianshu.com/p/50e0a7a28b53)
+<!--more-->
 
 # 实体类和映射
 一个实体类代表着数据库中的一个表，用**@Entity**进行标记，同时，一个持久化类内部要有一个id(主键)，用@Id进行注解，关于主键如何选择，参见：[数据库中主键的选择和使用](http://www.cnblogs.com/chuncn/archive/2009/04/22/1440901.html)。如下所示：

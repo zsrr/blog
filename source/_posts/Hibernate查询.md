@@ -6,6 +6,7 @@ categories: ORM
 
 ---
 本篇致力于Hibernate对数据的查询，主要有JPQL和Criteria两种方式，以前者为主。
+<!--more-->
 
 # 选择
 选择所有的实例：

@@ -5,6 +5,9 @@ tags: [数据库,ORM,Hibernate,Java Web,配置]
 categories: ORM
 
 ---
+记录一下开源JTA事务管理器Bitronix与Hibernate的集成
+<!--more-->
+
 一般情况下，JTA是和J2EE容器绑定起来的。要想在独立的Java环境下使用JTA，则要用第三方库。笔者采用Bitronix(BTM2)。本篇讲述如何整合BTM2 + Hibernate5开发环境。
 
 # 创建jndi.properties文件

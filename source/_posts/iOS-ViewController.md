@@ -5,6 +5,9 @@ tags: iOS
 categories: iOS开发
 
 ---
+本篇主要记录iOS中的Controller，简记
+<!--more-->
+
 ## UIViewController简介
 官方文档：  
 >The UIViewController class provides the infrastructure for managing the views of your iOS apps. A view controller manages a set of views that make up a portion of your app’s user interface. It is responsible for loading and disposing of those views, for managing interactions with those views, and for coordinating responses with any appropriate data objects. View controllers also coordinate their efforts with other controller objects—including other view controllers—and help manage your app’s overall interface.

@@ -6,6 +6,7 @@ categories: ORM
 
 ---
 对Hibernate的学习卡在了对insertable = false和updatable = false的理解上，故做此文章以记之。
+<!--more-->
 
 根据[官方文档](http://docs.oracle.com/javaee/5/api/javax/persistence/Column.html)来看，这两个参数决定着此列是否出现在SQL INSERT/UPDATE语句当中。
 

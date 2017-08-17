@@ -5,6 +5,9 @@ tags: Android
 categories: 安卓开发
 
 ---
+本篇记录DataBinding的基本使用，总的来说这个玩意能不用就不用，因为问题简直太多了而且报错简直奇葩。
+<!--more-->
+
 ## MVVM设计模式
 这是一种由MVP发展而来，起源于WPF开发的一种架构模式。全称为Model-View-ViewModel，其中ViewModel便是MVP对应的Presenter。其最大的特征是ViewModel实现了View和Model的双向绑定，只需要为每一个View定制一个Model，在xml中去引用Model类，强大的IDE便会自动生成ViewModel类。强大，简单，可测试，低耦合。  
 

@@ -5,6 +5,9 @@ tags: Android
 categories: 安卓开发
 
 ---
+网速不好就找个网速好的地方，破网速太tm恶心了
+<!--more-->
+
 # 为什么要编译源码
 安卓进阶的最好方式就是Read the fucking source code!不去研究源码的程序员不是好程序员，呵呵呵……好吧，其实笔者要编译源码的原因是因为想研究DataBinding源码结果发现自带的sdk看不到核心逻辑，而笔者却是一个处女座……
 # 流程

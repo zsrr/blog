@@ -5,6 +5,9 @@ tags: Java
 categories: Java
 
 ---
+一天看完了JPA Tutorial，记录一下
+<!--more-->
+
 **注：**此篇部分内容，图片来自[JPA Tutorial](http://ok34fi9ya.bkt.clouddn.com/jpa_tutorial.pdf)
 
 # 什么是ORM

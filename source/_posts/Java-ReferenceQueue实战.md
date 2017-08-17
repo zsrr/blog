@@ -5,6 +5,9 @@ tags: Java
 categories: Java
 
 ---
+受到了Picasso源码的启发写下了这篇文章，多看看优秀的开源项目源码果然是好的
+<!--more-->
+
 ## 浅谈ReferenceQueue
 先看官方文档对这个类的介绍：  
 > Reference queues, to which registered reference objects are appended by the

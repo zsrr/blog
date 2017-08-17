@@ -5,6 +5,9 @@ tags: [Android,Java]
 categories: 安卓开发
 
 ---
+因为项目里面一个开源库debug的包可以而release的包运行不起来，查了半天原来是混淆的锅，赶紧补
+<!--more-->
+
 先附上一个github地址： [android-proguard-snippets](https://github.com/krschultz/android-proguard-snippets)，里面记录了各种库的ProGuard规则。
 
 # ProGuard简介

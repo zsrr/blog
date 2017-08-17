@@ -5,6 +5,9 @@ tags: iOS
 categories: iOS开发
 
 ---
+闲的没事学学iOS，万一将来转行了呢2333
+<!--more-->
+
 ## UIView简介
 官方文档：  
 >The UIView class defines a rectangular area on the screen and the interfaces for managing the content in that area.  

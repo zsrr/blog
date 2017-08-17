@@ -5,6 +5,9 @@ tags: [数据库,ORM,Hibernate,Java Web]
 categories: ORM
 
 ---
+本篇主要集中于Hibernate对于Java类继承的处理方式
+<!--more-->
+
 回顾一下之前JPA处理继承类的方式，分成单表策略，合并表策略，一类一表策略，Hibernate也提供了类似的形式(JPA详见[Java ORM解决方案](http://www.stephenzhang.me/2017/04/14/Java-ORM%E8%A7%A3%E5%86%B3%E6%96%B9%E6%A1%88/))。
 
 # 每个带有联合的具体类使用一个表
