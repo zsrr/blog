@@ -1717,11 +1717,164 @@ getMethodArgumentValues:
 如上所示，添加的都是些常见的解析器，像是RequestParam、PathVariable、RequestBody、ResponseBody等等都是通过默认的解析器解析的，我们在定义RequestMappingAdapter的时候可以加上自己的解析器和HttpMessageConverter。
 
 ## ExceptionHandler注解
-对于ExceptionHandler注解，是由ExceptionHandlerExceptionResolver解析的(默认提供的实现为AnnotationMethodHandlerExceptionResolver,已弃用,不知道为什么还做默认策略提供)，此类的逻辑和上面RequestMappingAdapter的逻辑大致相同，感兴趣的可以自己看一下，这里不再进行分析。
+对于ExceptionHandler注解，是由ExceptionHandlerExceptionResolver解析的(默认提供的实现为AnnotationMethodHandlerExceptionResolver,已弃用,不明白为什么还作为默认策略提供。当收到处理异常的请求时，会调用其中的doResolveHandlerMethodException方法：
+
+    @Override
+    protected ModelAndView doResolveHandlerMethodException(HttpServletRequest request,
+            HttpServletResponse response, HandlerMethod handlerMethod, Exception exception) {
+
+        // 得到可供调用的方法
+        ServletInvocableHandlerMethod exceptionHandlerMethod = getExceptionHandlerMethod(handlerMethod, exception);
+        if (exceptionHandlerMethod == null) {
+            return null;
+        }
+
+        exceptionHandlerMethod.setHandlerMethodArgumentResolvers(this.argumentResolvers);
+        exceptionHandlerMethod.setHandlerMethodReturnValueHandlers(this.returnValueHandlers);
+
+        ServletWebRequest webRequest = new ServletWebRequest(request, response);
+        ModelAndViewContainer mavContainer = new ModelAndViewContainer();
+
+        try {
+            if (logger.isDebugEnabled()) {
+                logger.debug("Invoking @ExceptionHandler method: " + exceptionHandlerMethod);
+            }
+            Throwable cause = exception.getCause();
+            if (cause != null) {
+                // Expose cause as provided argument as well
+                exceptionHandlerMethod.invokeAndHandle(webRequest, mavContainer, exception, cause, handlerMethod);
+            }
+            else {
+                // Otherwise, just the given exception as-is
+                exceptionHandlerMethod.invokeAndHandle(webRequest, mavContainer, exception, handlerMethod);
+            }
+        }
+        catch (Throwable invocationEx) {
+            // Any other than the original exception is unintended here,
+            // probably an accident (e.g. failed assertion or the like).
+            if (invocationEx != exception && logger.isWarnEnabled()) {
+                logger.warn("Failed to invoke @ExceptionHandler method: " + exceptionHandlerMethod, invocationEx);
+            }
+            // Continue with default processing of the original exception...
+            return null;
+        }
+
+        if (mavContainer.isRequestHandled()) {
+            return new ModelAndView();
+        }
+        else {
+            ModelMap model = mavContainer.getModel();
+            HttpStatus status = mavContainer.getStatus();
+            ModelAndView mav = new ModelAndView(mavContainer.getViewName(), model, status);
+            mav.setViewName(mavContainer.getViewName());
+            if (!mavContainer.isViewReference()) {
+                mav.setView((View) mavContainer.getView());
+            }
+            if (model instanceof RedirectAttributes) {
+                Map<String, ?> flashAttributes = ((RedirectAttributes) model).getFlashAttributes();
+                request = webRequest.getNativeRequest(HttpServletRequest.class);
+                RequestContextUtils.getOutputFlashMap(request).putAll(flashAttributes);
+            }
+            return mav;
+        }
+    }
+此方法的处理逻辑和上面所讲的RequestMappingHandlerAdapter的处理过程差不多，下面来着重看一下getExceptionHandlerMethod方法：
+
+    protected ServletInvocableHandlerMethod getExceptionHandlerMethod(HandlerMethod handlerMethod, Exception exception) {
+        Class<?> handlerType = (handlerMethod != null ? handlerMethod.getBeanType() : null);
+
+        if (handlerMethod != null) {
+            // 从缓存当中取出
+            ExceptionHandlerMethodResolver resolver = this.exceptionHandlerCache.get(handlerType);
+            if (resolver == null) {
+                // 创建一个ExceptionHandlerMethodResolver并保存到缓存当中
+                resolver = new ExceptionHandlerMethodResolver(handlerType);
+                this.exceptionHandlerCache.put(handlerType, resolver);
+            }
+            Method method = resolver.resolveMethod(exception);
+            if (method != null) {
+                return new ServletInvocableHandlerMethod(handlerMethod.getBean(), method);
+            }
+        }
+
+        // Bean中没有响应的处理方法，转而向带有ControllerAdvice的Bean询问是否有相应的Resolver
+        for (Entry<ControllerAdviceBean, ExceptionHandlerMethodResolver> entry : this.exceptionHandlerAdviceCache.entrySet()) {
+            if (entry.getKey().isApplicableToBeanType(handlerType)) {
+                ExceptionHandlerMethodResolver resolver = entry.getValue();
+                Method method = resolver.resolveMethod(exception);
+                if (method != null) {
+                    return new ServletInvocableHandlerMethod(entry.getKey().resolveBean(), method);
+                }
+            }
+        }
+
+        return null;
+    }
+其中ExceptionHandlerMethodResolver维持着一个异常类型到方法的映射，看一下它的构造方法：
+
+    public ExceptionHandlerMethodResolver(Class<?> handlerType) {
+        for (Method method : MethodIntrospector.selectMethods(handlerType, EXCEPTION_HANDLER_METHODS)) {
+            for (Class<? extends Throwable> exceptionType : detectExceptionMappings(method)) {
+                addExceptionMapping(exceptionType, method);
+            }
+        }
+    }
+再来看一下它的resolveMethodByExceptionType方法：
+
+    public Method resolveMethodByExceptionType(Class<? extends Throwable> exceptionType) {
+        // 尝试从缓存当中读取
+        Method method = this.exceptionLookupCache.get(exceptionType);
+        if (method == null) {
+            // 读不成再尝试从映射信息中挑选出最优方法
+            method = getMappedMethod(exceptionType);
+            this.exceptionLookupCache.put(exceptionType, (method != null ? method : NO_METHOD_FOUND));
+        }
+        return (method != NO_METHOD_FOUND ? method : null);
+    }
+getMappedMethod便是真正的根据异常类型获取对应方法的函数：
+
+    private Method getMappedMethod(Class<? extends Throwable> exceptionType) {
+        List<Class<? extends Throwable>> matches = new ArrayList<Class<? extends Throwable>>();
+        for (Class<? extends Throwable> mappedException : this.mappedMethods.keySet()) {
+            // 如果是此种类型的
+            if (mappedException.isAssignableFrom(exceptionType)) {
+                matches.add(mappedException);
+            }
+        }
+        if (!matches.isEmpty()) {
+            // 挑选出最优的Method
+            Collections.sort(matches, new ExceptionDepthComparator(exceptionType));
+            return this.mappedMethods.get(matches.get(0));
+        }
+        else {
+            return null;
+        }
+    }
+下面来看一下ExceptionDepthComparator的实现：
+
+    @Override
+    public int compare(Class<? extends Throwable> o1, Class<? extends Throwable> o2) {
+        int depth1 = getDepth(o1, this.targetException, 0);
+        int depth2 = getDepth(o2, this.targetException, 0);
+        return (depth1 - depth2);
+    }
+
+    private int getDepth(Class<?> declaredException, Class<?> exceptionToMatch, int depth) {
+        if (exceptionToMatch.equals(declaredException)) {
+            // Found it!
+            return depth;
+        }
+        // If we've gone as far as we can go and haven't found it...
+        if (exceptionToMatch == Throwable.class) {
+            return Integer.MAX_VALUE;
+        }
+        return getDepth(declaredException, exceptionToMatch.getSuperclass(), depth + 1);
+    }
+这是一个递归方法，由此可以总结出ExceptionHandler的匹配规则是从具体到泛型这样匹配，有先选择处理与异常类继承关系较近的父类处理方法。
 
 
 
-嗯，就总结这么多吧～
+好了，就总结这么多吧。
 
 
 
