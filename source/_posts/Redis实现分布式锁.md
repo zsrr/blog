@@ -7,6 +7,7 @@ categories: Redis
 ---
 本篇记录一下如何用Redis实现分布式锁，参考书籍[《Redis实战》](https://item.jd.com/11791607.html)，采用Jedis实现。
 
+<!--more-->
 
 # 分布式锁的概念
 分布式锁是用来协调分布式系统当中各节点对于资源的获取、更新、删除。比较常用的是Redlock和Zookeeper(前者遭到了质疑)，以及可以直接将此任务托付给底层RDBMS，具体参见博客[聊一聊分布式锁的设计](http://www.weizijun.cn/2016/03/17/%E8%81%8A%E4%B8%80%E8%81%8A%E5%88%86%E5%B8%83%E5%BC%8F%E9%94%81%E7%9A%84%E8%AE%BE%E8%AE%A1/)。
