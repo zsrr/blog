@@ -4,7 +4,7 @@ date: 2017-09-09 10:28:19
 tags: [Java Web,Spring,源码解析]
 categories: Spring
 ---
-本篇记录Spring MVC的原理，参考书[Spring技术内幕](https://item.jd.com/10922251.html)。
+本篇记录Spring MVC的原理，主要讲述上下文如何启动和请求如何处理，以及异常的处理。参照Spring4源码。
 
 <!--more-->
 
@@ -1870,7 +1870,7 @@ getMappedMethod便是真正的根据异常类型获取对应方法的函数：
         }
         return getDepth(declaredException, exceptionToMatch.getSuperclass(), depth + 1);
     }
-这是一个递归方法，由此可以总结出ExceptionHandler的匹配规则是从具体到泛型这样匹配，有先选择处理与异常类继承关系较近的父类处理方法。
+这是一个递归方法，由此可以总结出ExceptionHandler的匹配规则是从具体到泛型这样匹配，优先选择处理与异常类继承关系较近的父类处理方法。
 
 
 
