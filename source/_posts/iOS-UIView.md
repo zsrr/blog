@@ -2,7 +2,7 @@
 title: iOS UIView
 date: 2017-02-01 20:37:56
 tags: iOS
-categories: iOS开发
+categories: iOS
 
 ---
 闲的没事学学iOS，万一将来转行了呢2333

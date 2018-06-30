@@ -2,7 +2,7 @@
 title: iOS ViewController
 date: 2017-02-01 18:56:10
 tags: iOS
-categories: iOS开发
+categories: iOS
 
 ---
 本篇主要记录iOS中的Controller，简记

@@ -77,7 +77,5 @@ baidusitemap:
 # Deployment
 ## Docs: https://hexo.io/docs/deployment.html
 deploy:
-  type: rsync
-  host: 47.94.245.43
-  user: root
-  root: /stephenzhang/blog
+  type: git
+  repo: https://github.com/zsrr/zsrr.github.io.git
