@@ -1,16 +1,11 @@
 ---
 title: iOS触摸事件
-date: 2018-06-25 21:01:38
+date: 2017-02-25 21:01:38
 tags: [iOS,UIKit]
 categories: iOS
 
 ---
-本篇开始进行iOS的进阶学习，大致分成四部曲：
-
-- 基础API的使用，包括UIKit和CoreAnimation等等，主要看一下文档，总结即可。
-- OC进阶。
-- iOS系统进阶。
-- 几个主要的库的源代码看一下。
+本篇介绍iOS中响应链，为一篇简短的学习记录。
 
 以下内容参考：
 
@@ -76,6 +71,25 @@ hitTest的逻辑大致是这样的:
         }
         return hitTestingBounds;
     }
+### 处理子View超出父View的点击响应问题
+有一种很常见的场景就是子View超出了父View但是需要响应事件，比如自定义TabBar有可能中间的那个按钮比前两个和后两个都要大，这个时候需要在这个View的父View中重写响应的hitTest方法：
+
+    -(UIView *)hitTest:(CGPoint)point withEvent:(UIEvent *)event {
+        UIView *view = [super hitTest:point withEvent:event];
+        
+        if (view == nil) {
+            for (UIView *subView in self.subviews) {
+                CGPoint myPoint = [subView convertPoint:point fromView:self];
+                if (CGRectContainsPoint(subView.bounds, myPoint)) {
+                    
+                    return subView;
+                }
+            }
+        }
+        
+        return view;
+    }
+
 ## Next Responder
 当选中的First Responder选择不响应当前触摸事件的时候，此时会把事件传到nextResponder，nextResponder的寻找规则为(下方摘自官方文档)：
 
